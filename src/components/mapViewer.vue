@@ -43,6 +43,7 @@ const layerControl = L.control
 
 <style lang="scss">
 /* MAP SETUP */
+
 #map{
     width: 100%;
     min-width: 100%;
@@ -57,19 +58,19 @@ const layerControl = L.control
       height: 3rem!important;
       line-height: 3rem!important;
       font-size: 1.75rem!important;
-      background-color: var(--sidebar-crl-primary)!important;
+      background-color: var(--controls-crl-primary)!important;
       color: var(--font-crl-primary)!important;
   }
 
   .leaflet-control-layers {
     font-family: 'abhaya_libreregular';
-    background-color: var(--sidebar-crl-primary);
+    background-color: var(--controls-crl-primary);
     color: var(--font-crl-primary);
     font-size: 1.15rem;
 }
 
 .leaflet-control-zoom a:hover {
-    background-color: var(--tab-crl-primary)!important;
+    background-color: var(--active-hover-crl)!important;
 }
 
 

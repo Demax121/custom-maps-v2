@@ -1,0 +1,1 @@
+const sidebar = L.control.sidebar("sidebar").addTo(Worldmap);

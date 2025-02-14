@@ -1,254 +1,38 @@
 <script setup>
-/* global L */
-
-/**
- * @name Sidebar
- * @class L.Control.Sidebar
- * @extends L.Control
- * @param {string} id - The id of the sidebar element (without the # character)
- * @param {Object} [options] - Optional options object
- * @param {string} [options.position=left] - Position of the sidebar: 'left' or 'right'
- * @see L.control.sidebar
- */
- L.Control.Sidebar = L.Control.extend(/** @lends L.Control.Sidebar.prototype */ {
-    includes: (L.Evented.prototype || L.Mixin.Events),
-
-    options: {
-        position: 'left'
-    },
-
-    initialize: function (id, options) {
-        var i, child;
-
-        L.setOptions(this, options);
-
-        // Find sidebar HTMLElement
-        this._sidebar = L.DomUtil.get(id);
-
-        // Attach .sidebar--left/right class
-        L.DomUtil.addClass(this._sidebar, 'sidebar--' + this.options.position);
-
-        // Attach touch styling if necessary
-        if (L.Browser.touch)
-            L.DomUtil.addClass(this._sidebar, 'leaflet-touch');
-
-        // Find sidebar > div.sidebar__content
-        for (i = this._sidebar.children.length - 1; i >= 0; i--) {
-            child = this._sidebar.children[i];
-            if (child.tagName == 'DIV' &&
-                    L.DomUtil.hasClass(child, 'sidebar__content'))
-                this._container = child;
-        }
-
-        // Find sidebar ul.sidebar__tabs > li, sidebar .sidebar__tabs > ul > li
-        this._tabitems = this._sidebar.querySelectorAll('ul.sidebar__tabs > li, .sidebar__tabs > ul > li');
-        for (i = this._tabitems.length - 1; i >= 0; i--) {
-            this._tabitems[i]._sidebar = this;
-        }
-
-        // Find sidebar > div.sidebar__content > div.sidebar__pane
-        this._panes = [];
-        this._closeButtons = [];
-        for (i = this._container.children.length - 1; i >= 0; i--) {
-            child = this._container.children[i];
-            if (child.tagName == 'DIV' &&
-                L.DomUtil.hasClass(child, 'sidebar__pane')) {
-                this._panes.push(child);
-
-                var closeButtons = child.querySelectorAll('.pane__close');
-                for (var j = 0, len = closeButtons.length; j < len; j++)
-                    this._closeButtons.push(closeButtons[j]);
-            }
-        }
-    },
-
-    /**
-     * Add this sidebar to the specified map.
-     *
-     * @param {L.Map} map
-     * @returns {Sidebar}
-     */
-    addTo: function (map) {
-        var i, child;
-
-        this._map = map;
-
-        for (i = this._tabitems.length - 1; i >= 0; i--) {
-            child = this._tabitems[i];
-            var sub = child.querySelector('a');
-            if (sub.hasAttribute('href') && sub.getAttribute('href').slice(0,1) == '#') {
-                L.DomEvent
-                    .on(sub, 'click', L.DomEvent.preventDefault )
-                    .on(sub, 'click', this._onClick, child);
-            }
-        }
-
-        for (i = this._closeButtons.length - 1; i >= 0; i--) {
-            child = this._closeButtons[i];
-            L.DomEvent.on(child, 'click', this._onCloseClick, this);
-        }
-
-        return this;
-    },
-
-    /**
-     * @deprecated - Please use remove() instead of removeFrom(), as of Leaflet 0.8-dev, the removeFrom() has been replaced with remove()
-     * Removes this sidebar from the map.
-     * @param {L.Map} map
-     * @returns {Sidebar}
-     */
-     removeFrom: function(map) {
-         console.log('removeFrom() has been deprecated, please use remove() instead as support for this function will be ending soon.');
-         this.remove(map);
-     },
-
-    /**
-     * Remove this sidebar from the map.
-     *
-     * @param {L.Map} map
-     * @returns {Sidebar}
-     */
-    remove: function (map) {
-        var i, child;
-
-        this._map = null;
-
-        for (i = this._tabitems.length - 1; i >= 0; i--) {
-            child = this._tabitems[i];
-            L.DomEvent.off(child.querySelector('a'), 'click', this._onClick);
-        }
-
-        for (i = this._closeButtons.length - 1; i >= 0; i--) {
-            child = this._closeButtons[i];
-            L.DomEvent.off(child, 'click', this._onCloseClick, this);
-        }
-
-        return this;
-    },
-
-    /**
-     * Open sidebar (if necessary) and show the specified tab.
-     *
-     * @param {string} id - The id of the tab to show (without the # character)
-     */
-    open: function(id) {
-        var i, child;
-
-        // hide old active contents and show new content
-        for (i = this._panes.length - 1; i >= 0; i--) {
-            child = this._panes[i];
-            if (child.id == id)
-                L.DomUtil.addClass(child, 'active');
-            else if (L.DomUtil.hasClass(child, 'active'))
-                L.DomUtil.removeClass(child, 'active');
-        }
-
-        // remove old active highlights and set new highlight
-        for (i = this._tabitems.length - 1; i >= 0; i--) {
-            child = this._tabitems[i];
-            if (child.querySelector('a').hash == '#' + id)
-                L.DomUtil.addClass(child, 'active');
-            else if (L.DomUtil.hasClass(child, 'active'))
-                L.DomUtil.removeClass(child, 'active');
-        }
-
-        this.fire('pane__content', { id: id });
-
-        // open sidebar (if necessary)
-        if (L.DomUtil.hasClass(this._sidebar, 'sidebar--collapsed')) {
-            this.fire('opening');
-            L.DomUtil.removeClass(this._sidebar, 'sidebar--collapsed');
-        }
-
-        return this;
-    },
-
-    /**
-     * Close the sidebar (if necessary).
-     */
-    close: function() {
-        // remove old active highlights
-        for (var i = this._tabitems.length - 1; i >= 0; i--) {
-            var child = this._tabitems[i];
-            if (L.DomUtil.hasClass(child, 'active'))
-                L.DomUtil.removeClass(child, 'active');
-        }
-
-        // close sidebar
-        if (!L.DomUtil.hasClass(this._sidebar, 'sidebar--collapsed')) {
-            this.fire('closing');
-            L.DomUtil.addClass(this._sidebar, 'sidebar--collapsed');
-        }
-
-        return this;
-    },
-
-    /**
-     * @private
-     */
-    _onClick: function() {
-        if (L.DomUtil.hasClass(this, 'active'))
-            this._sidebar.close();
-        else if (!L.DomUtil.hasClass(this, 'tabs__item--disabled'))
-            this._sidebar.open(this.querySelector('a').hash.slice(1));
-    },
-
-    /**
-     * @private
-     */
-    _onCloseClick: function () {
-        this.close();
-    }
-});
-
-/**
- * Creates a new sidebar.
- *
- * @example
- * var sidebar = L.control.sidebar('sidebar').addTo(map);
- *
- * @param {string} id - The id of the sidebar element (without the # character)
- * @param {Object} [options] - Optional options object
- * @param {string} [options.position=left] - Position of the sidebar: 'left' or 'right'
- * @returns {Sidebar} A new sidebar instance
- */
-L.control.sidebar = function (id, options) {
-    return new L.Control.Sidebar(id, options);
-};
-
+import HomeTab from './homeTab.vue';
+import InitialMarkersTab from './initialMarkersTab.vue';
+import CustomMarkersTab from './customMarkersTab.vue';
 
 
 </script>
 
 <template>
-
 <div id="sidebar" class="sidebar sidebar--collapsed">
       <!-- Nav tabs -->
       <div class="sidebar__tabs">
-        <ul role="tablist" class="tabs__list">
-          <li class="tabs__item"><a href="#home" role="tab" class="tabs__link"><i class="fa fa-bars"></i></a></li>
+        <ul role="tablist" class="sidebar__tabs-list">
+          <li class="sidebar__tabs-item"><a href="#home" role="tab" class="sidebar__tabs-link"><i class="fa fa-bars"></i></a></li>
+          <li class="sidebar__tabs-item"><a href="#InitialMarkersTab" role="tab" class="sidebar__tabs-link"><i class="fa-solid fa-book-open-reader"></i></a></li>
+          <li class="sidebar__tabs-item"><a href="#CustomMarkersTab" role="tab" class="sidebar__tabs-link"><i class="fa-solid fa-location-dot"></i></a></li>
         </ul>
 
-        <ul role="tablist" class="tabs__list">
-          <li class="tabs__item tabs__item--disabled"><a href="#settings" role="tab" class="tabs__link"><i class="fa fa-gear"></i></a></li>
+        <ul role="tablist" class="sidebar__tabs-list">
+          <li class="sidebar__tabs-item sidebar__tabs-item--disabled"><a href="#settings" role="tab" class="sidebar__tabs-link"><i class="fa fa-gear"></i></a></li>
         </ul>
       </div>
-      <!-- Tab panes -->
+      
+      
       <div class="sidebar__content">
-        <div class="sidebar__pane" id="home">
-            <div class="pane__header">
-                <h1 class="pane__title">sidebar-v2</h1>
-                <span class="pane__close"><i class="fa fa-caret-left"></i></span>
-            </div>
-            <div class="pane__content">
-                <p> A responsive sidebar for mapping libraries like </p>
-            </div>
-        </div>
+        <!-- import tab components here -->
+         <!-- Tab panes -->
+        <HomeTab />
+        <InitialMarkersTab />
+        <CustomMarkersTab />
+        
+        
+
       </div>
     </div>
-
-
-
 </template>
 
 <style lang="scss">
@@ -297,36 +81,37 @@ L.control.sidebar = function (id, options) {
   right: 0;
 }
 
-.tabs__list {
+.sidebar__tabs-list {
   position: absolute;
   width: var(--sidebar-sizing-desktop);
   margin: 0;
   padding: 0;
   list-style-type: none;
 }
-.tabs__item {
+.sidebar__tabs-item {
   width: 100%;
   color: var(--font-crl-primary); /* sidebar icon color */
   font-size: 21pt; /* sidebar icon size */
   overflow: hidden;
   transition: all 80ms;
 }
-.tabs__item:hover,
-.tabs__item.active {
+.sidebar__tabs-item:hover,
+.sidebar__tabs-item--active {
   background-color: var(--active-hover-crl);
+  
 }
 
-.tabs__item--disabled {
+.sidebar__tabs-item--disabled {
 }
-.tabs__item--disabled:hover {
+.sidebar__tabs-item--disabled:hover {
   background: transparent;
 }
-.tabs__item--disabled .tabs__link {
+.sidebar__tabs-item--disabled .sidebar__tabs-link {
   cursor: default;
 }
 
 
-.tabs__link {
+.sidebar__tabs-link {
   display: block;
   width: 100%;
   height: 100%;
@@ -335,7 +120,7 @@ L.control.sidebar = function (id, options) {
   text-decoration: none;
   text-align: center;
 }
-.sidebar__tabs .tabs__list:last-child {
+.sidebar__tabs .sidebar__tabs-list:last-child {
   bottom: 0;
 }
 
@@ -367,41 +152,50 @@ L.control.sidebar = function (id, options) {
   box-sizing: border-box;
   padding: 1rem 2rem;
 }
-.sidebar__pane.active {
+.sidebar__pane--active {
   display: block;
 }
 
-.pane__header {
+.sidebar__pane-header {
   width: 100%;
   height: 3rem;
   color: var(--font-crl-primary);
-  border-bottom: 2px solid var(--font-crl-primary);
   text-align: center;
-  padding-top: .75rem;
 }
-.pane__content {
-  margin-top: 1rem;
+
+.sidebar__pane-header::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: .15rem;
+  background-color: var(--font-crl-primary);
+}
+
+.sidebar__pane-content {
+  margin: 2rem 0 ;
   color: var(--font-crl-primary);
 }
 
-.pane__title {
+.sidebar__pane-title {
   width: 100%;
   display: inline;
+  font-size: 25pt;
+  padding-bottom: 1rem;
 }
 
-.pane__close {
+.sidebar__pane-close {
   position: absolute;
   top: 1rem;
   width: 40px;
   height: 40px;
   text-align: center;
   cursor: pointer;
-  font-size: 2.5rem;
+  font-size: 18pt;
 }
-.sidebar--left .pane__close {
+.sidebar--left .sidebar__pane-close {
   right: 0;
 }
-.sidebar--right .pane__close {
+.sidebar--right .sidebar__pane-close {
   left: 0;
 }
 
@@ -450,6 +244,8 @@ L.control.sidebar = function (id, options) {
   .sidebar--right ~ .sidebar-map .leaflet-right {right: var(--sidebar-position-1200);
   }
 }
+
+
 
 
 

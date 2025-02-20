@@ -1,26 +1,17 @@
 
 <script setup>
-import { ref, provide, onMounted } from 'vue';
+import {computed, onMounted, watch } from 'vue';
+import { mapSettingsStore } from '../scripts/mapSettingsStore';
+
 
 
 // Constants for map configuration
 const MAP_PATH = 'http://127.0.0.1/maps/test/{z}/{y}/{x}.webp';
-const MAP_SETTINGS_PATH = 'http://127.0.0.1/maps.php';
 
-// Function to initialize the map with settings
-const initializeMap = async () => {
-  try {
-    // Fetch map settings
-    const response = await fetch(MAP_SETTINGS_PATH);
-    if (!response.ok) {
-      throw new Error(`Network response was not ok: ${response.statusText}`);
-    }
-    const data = await response.json();
-
-    // Create the tile layer with fetched settings
-    const fullmap = L.tileLayer(MAP_PATH, {
-      minZoom: data.mapMinZoom,
-      maxZoom: data.mapMaxZoom,
+function initializeMap(mapMinZoom, mapMaxZoom) {
+const fullmap = L.tileLayer(MAP_PATH, {
+      minZoom: mapMinZoom,
+      maxZoom: mapMaxZoom,
       continuousWorld: false,
       noWrap: true,
       updateWhenIdle: true,
@@ -30,29 +21,27 @@ const initializeMap = async () => {
     });
 
     // Initialize the Leaflet map
-    map.value = L.map('map', {
+    const Worldmap = L.map('map', {
       layers: [fullmap],
       zoomSnap: 0.25,
       zoomControl: false,
     }).setView([0, 0], 2);
+L.control.zoom({position: "topright",}).addTo(Worldmap);
+const sidebar = L.control.sidebar('sidebar').addTo(Worldmap);
+const layerControl = L.control.layers(null, null, { collapsed: true }).addTo(Worldmap);
+}
 
-    // Add controls to the map
-    L.control.zoom({ position: 'topright' }).addTo(map.value);
-    const sidebar = L.control.sidebar('sidebar').addTo(map.value);
-    const layerControl = L.control
-      .layers(null, null, { collapsed: true })
-      .addTo(map.value);
-
-  } catch (error) {
-    console.error('Error initializing map:', error);
-    // Here you might want to show an error message to the user
-  }
-};
-
-// Initialize the map when the component is mounted
 onMounted(() => {
-  initializeMap();
+  const settingsStore = mapSettingsStore();
+  const mapSettings = computed(() => settingsStore.mapData);
+  watch(mapSettings, (settings) => {
+    console.log(settings.mapMinZoom);
+    initializeMap(settings.mapMinZoom, settings.mapMaxZoom);
+  });
+  
+
 });
+
 </script>
 
 <template>

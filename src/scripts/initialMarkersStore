@@ -1,0 +1,29 @@
+import { defineStore } from 'pinia';
+const INITIAL_MARKERS_PATH = 'http://127.0.0.1/markers.php';
+export const initialMarkersStore = defineStore('initialMarkers', {
+    state: () => ({
+      markersData: null,
+    }),
+    actions: {
+      setMarkersData(markerData) {
+        this.markersData = markerData;
+      },
+    },
+  });
+
+const initializeMarkers = async () => {
+    try {
+      // Fetch map settings
+      const response = await fetch(INITIAL_MARKERS_PATH);
+      if (!response.ok) {
+        throw new Error(`Network response was not ok: ${response.statusText}`);
+      }
+      const data = await response.json();
+        const markersStore = initialMarkersStore();
+        markersStore.setMarkersData(data);
+        } catch (error) {
+            console.error('Error initializing map:', error);
+        }
+    };
+
+initializeMarkers();

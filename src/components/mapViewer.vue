@@ -1,45 +1,57 @@
 
 <script setup>
-import {computed, onMounted, watch } from 'vue';
-import { mapSettingsStore } from '../scripts/mapSettingsStore';
-
+import { inject, ref, nextTick, onMounted, watch } from 'vue';
+const initialMarkers = inject('initialMarkersProvided');
+const mapSettings = inject('mapSettingsProvided');
 
 
 // Constants for map configuration
 const MAP_PATH = 'http://127.0.0.1/maps/test/{z}/{y}/{x}.webp';
+const Worldmap = ref(null);
+const sidebar = ref(null);
+const layerControl = ref(null);
 
 function initializeMap(mapMinZoom, mapMaxZoom) {
-const fullmap = L.tileLayer(MAP_PATH, {
-      minZoom: mapMinZoom,
-      maxZoom: mapMaxZoom,
-      continuousWorld: false,
-      noWrap: true,
-      updateWhenIdle: true,
-      keepBuffer: 32,
-      format: 'image/webp',
-      edgeBufferTiles: 16,
-    });
+  const fullmap = L.tileLayer(MAP_PATH, {
+    minZoom: mapMinZoom,
+    maxZoom: mapMaxZoom,
+    continuousWorld: false,
+    noWrap: true,
+    updateWhenIdle: true,
+    keepBuffer: 32,
+    format: 'image/webp',
+    edgeBufferTiles: 16,
+  });
 
-    // Initialize the Leaflet map
-    const Worldmap = L.map('map', {
-      layers: [fullmap],
-      zoomSnap: 0.25,
-      zoomControl: false,
-    }).setView([0, 0], 2);
-L.control.zoom({position: "topright",}).addTo(Worldmap);
-const sidebar = L.control.sidebar('sidebar').addTo(Worldmap);
-const layerControl = L.control.layers(null, null, { collapsed: true }).addTo(Worldmap);
+  // Initialize the Leaflet map
+  Worldmap.value = L.map('map', {
+    layers: [fullmap],
+    zoomSnap: 0.25,
+    zoomControl: false,
+  }).setView([0, 0], 2);
+
+    L.control.zoom({ position: "topright" }).addTo(Worldmap.value);
+    sidebar.value = L.control.sidebar('sidebar').addTo(Worldmap.value);
+    layerControl.value = L.control.layers(null, null, { collapsed: true }).addTo(Worldmap.value);
 }
 
-onMounted(() => {
-  const settingsStore = mapSettingsStore();
-  const mapSettings = computed(() => settingsStore.mapData);
+function addMarkersToMap(markers, map) {
+  markers.forEach(marker => {
+    L.marker(marker.coordinates).addTo(map).bindPopup(marker.markerName);
+  });
+}
+
+onMounted( ()=> {
+
   watch(mapSettings, (settings) => {
-    console.log(settings.mapMinZoom);
     initializeMap(settings.mapMinZoom, settings.mapMaxZoom);
   });
-  
 
+  watch([initialMarkers, Worldmap], ([markers, map]) => {
+    if (markers && map) {
+      addMarkersToMap(markers, map);
+    }
+  });
 });
 
 </script>

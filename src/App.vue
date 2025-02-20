@@ -1,8 +1,11 @@
 <script setup>
-import { provide } from 'vue';
 
 import mapViewer from './components/mapViewer.vue'
 import sidebar from './components/sidebar.vue'
+
+
+
+
 
 </script>
 

@@ -9,11 +9,11 @@ app.use(pinia);
 
 
 
-import { mapSettingsStore } from './scripts/mapSettingsStore';
-import { initialMarkersStore } from './scripts/initialMarkersStore';
-const markersStore = initialMarkersStore();
+import { useMapSettingsStore } from './scripts/mapDataStore';
+import { useInitialMarkersStore } from './scripts/initialMarkersStore';
+const markersStore = useInitialMarkersStore();
 const initialMarkers = computed(() => markersStore.markersData);
-const settingsStore = mapSettingsStore();
+const settingsStore = useMapSettingsStore();
 const mapSettings = computed(() => settingsStore.mapData);
 
 

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 const INITIAL_MARKERS_PATH = 'http://127.0.0.1/markers.php';
-export const initialMarkersStore = defineStore('initialMarkers', {
+export const useInitialMarkersStore = defineStore('initialMarkers', {
     state: () => ({
       markersData: null,
     }),
@@ -19,7 +19,7 @@ const initializeMarkers = async () => {
         throw new Error(`Network response was not ok: ${response.statusText}`);
       }
       const data = await response.json();
-        const markersStore = initialMarkersStore();
+        const markersStore = useInitialMarkersStore();
         markersStore.setMarkersData(data);
         } catch (error) {
             console.error('Error initializing map:', error);

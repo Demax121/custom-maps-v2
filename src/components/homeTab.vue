@@ -1,6 +1,21 @@
 <script setup>
-import { ref, inject } from 'vue'
-const mapTitle = ref('aaaa');
+import {inject, ref, onMounted, watch } from 'vue';
+
+const mapData = inject('mapSettingsProvided');
+const mapTitle = ref(null);
+
+onMounted(() => {
+  watch(mapData, (data) => {
+    if (data && data.mapName) {
+      mapTitle.value = data.mapName;
+    } else {
+      mapTitle.value = "Map Name";
+    }
+  });
+});
+
+
+
 </script>
 
 

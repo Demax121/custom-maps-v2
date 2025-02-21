@@ -1,6 +1,6 @@
 
 <script setup>
-import { inject, ref, nextTick, onMounted, watch } from 'vue';
+import {inject, ref, onMounted, watch } from 'vue';
 const initialMarkers = inject('initialMarkersProvided');
 const mapSettings = inject('mapSettingsProvided');
 
@@ -35,9 +35,25 @@ function initializeMap(mapMinZoom, mapMaxZoom) {
     layerControl.value = L.control.layers(null, null, { collapsed: true }).addTo(Worldmap.value);
 }
 
+
+function createIcon (icon){
+  if (icon == null){
+    icon = 'basic.webp';
+  }
+  return new L.Icon({
+      iconUrl: `assets/markerIcons/${icon}`,
+      shadowUrl: `assets/markerIcons/marker-shadow.png`,
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41],
+  });  
+}
+
+
 function addMarkersToMap(markers, map) {
   markers.forEach(marker => {
-    L.marker(marker.coordinates).addTo(map).bindPopup(marker.markerName);
+    L.marker(marker.coordinates,  {icon: createIcon(marker.markerIcon)}).addTo(map).bindPopup(marker.markerName);
   });
 }
 

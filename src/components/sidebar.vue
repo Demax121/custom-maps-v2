@@ -1,4 +1,5 @@
 <script setup>
+
 import HomeTab from './homeTab.vue';
 import InitialMarkersTab from './initialMarkersTab.vue';
 import CustomMarkersTab from './customMarkersTab.vue';

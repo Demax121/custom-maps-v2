@@ -36,7 +36,50 @@ export const useMapSettingsStore = defineStore('mapSettingsStore', {
 // });
 
 
-  export const useMapDataStore = defineStore('mapDataStore', {
+
+
+// const initializeMapSettingsStore = async () => {
+//   try {
+//     // Fetch map settings
+//     const response = await fetch(MAP_SETTINGS_PATH);
+//     if (!response.ok) {
+//       throw new Error(`Network response was not ok: ${response.statusText}`);
+//     }
+//     const data = await response.json();
+//       const mapStore = useMapSettingsStore();
+//       mapStore.setMinZoom(data.minZoom);
+//       mapStore.setMaxZoom(data.maxZoom);
+//       } catch (error) {
+//           console.error('Error initializing map:', error);
+//   }
+// };
+
+
+
+
+const initializeMapSettingsStore = async () => {
+  try {
+    // Fetch map settings
+    const response = await fetch(MAP_SETTINGS_PATH);
+    if (!response.ok) {
+      throw new Error(`Network response was not ok: ${response.statusText}`);
+    }
+    const data = await response.json();
+      const mapStore = useMapSettingsStore();
+      mapStore.setMapData(data);
+      } catch (error) {
+          console.error('Error initializing map:', error);
+  }
+};
+
+
+
+
+
+
+
+
+export const useMapDataStore = defineStore('mapDataStore', {
     state: (title, description) => ({
         mapTitle: title,
         mapDescription: description,
@@ -79,39 +122,6 @@ const initializeMapDataStore = async ()=> {
 
 
 
-// const initializeMapSettingsStore = async () => {
-//   try {
-//     // Fetch map settings
-//     const response = await fetch(MAP_SETTINGS_PATH);
-//     if (!response.ok) {
-//       throw new Error(`Network response was not ok: ${response.statusText}`);
-//     }
-//     const data = await response.json();
-//       const mapStore = useMapSettingsStore();
-//       mapStore.setMinZoom(data.minZoom);
-//       mapStore.setMaxZoom(data.maxZoom);
-//       } catch (error) {
-//           console.error('Error initializing map:', error);
-//   }
-// };
-
-
-
-
-const initializeMapSettingsStore = async () => {
-    try {
-      // Fetch map settings
-      const response = await fetch(MAP_SETTINGS_PATH);
-      if (!response.ok) {
-        throw new Error(`Network response was not ok: ${response.statusText}`);
-      }
-      const data = await response.json();
-        const mapStore = useMapSettingsStore();
-        mapStore.setMapData(data);
-        } catch (error) {
-            console.error('Error initializing map:', error);
-    }
-};
 
 
 initializeMapSettingsStore();

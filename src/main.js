@@ -17,6 +17,7 @@ const settingsStore = useMapSettingsStore();
 const mapSettings = computed(() => settingsStore.mapData);
 
 
+
 app.provide(/* key */ 'initialMarkersProvided', /* value */ initialMarkers);
 app.provide(/* key */ 'mapSettingsProvided', /* value */ mapSettings);
 
